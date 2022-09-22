@@ -8,6 +8,7 @@ package util
 
 import (
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/omec-project/util/drsm"
@@ -112,7 +113,8 @@ func InitAmfContext(context *context.AMFContext) {
 	context.T3565Cfg = configuration.T3565
 	context.EnableSctpLb = configuration.EnableSctpLb
 	context.EnableDbStore = configuration.EnableDbStore
-
+	context.EnableNrfCaching = configuration.EnableNrfCaching
+	context.NrfCacheEvictionInterval = time.Duration(configuration.NrfCacheEvictionInterval)
 }
 
 func getIntAlgOrder(integrityOrder []string) (intOrder []uint8) {
