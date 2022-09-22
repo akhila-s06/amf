@@ -9,11 +9,12 @@ package nrf_cache
 import (
 	"container/heap"
 	"encoding/json"
+	"sync"
+	"time"
+
 	"github.com/omec-project/amf/logger"
 	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
 	"github.com/omec-project/openapi/models"
-	"sync"
-	"time"
 )
 
 const defaultCacheTTl = time.Hour
@@ -359,4 +360,22 @@ func SearchNFInstances(nrfUri string, targetNfType, requestNfType models.NfType,
 
 	return searchResult, err
 
+}
+
+func RemoveNfInstanceFromCache(nfInstanceId string) bool {
+	nfTypes := make([]models.NfType, 0, len(masterCache.nfTypeToCacheMap))
+	for nfType := range masterCache.nfTypeToCacheMap {
+		nfTypes = append(nfTypes, nfType)
+	}
+	remove := false
+	for _, nfType := range nfTypes {
+		nrfCache := masterCache.nfTypeToCacheMap[nfType]
+		NfProfileItem := nrfCache.cache[nfInstanceId]
+		if nrfCache == nil || NfProfileItem == nil {
+			continue
+		}
+		nrfCache.remove(NfProfileItem)
+		remove = true
+	}
+	return remove
 }

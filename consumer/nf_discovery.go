@@ -8,8 +8,9 @@ package consumer
 import (
 	"context"
 	"fmt"
-	nrf_cache "github.com/omec-project/amf/nrfcache"
 	"net/http"
+
+	nrf_cache "github.com/omec-project/amf/nrfcache"
 
 	amf_context "github.com/omec-project/amf/context"
 	"github.com/omec-project/amf/logger"
@@ -44,6 +45,20 @@ func SendNfDiscoveryToNrf(nrfUri string, targetNfType, requestNfType models.NfTy
 			err = fmt.Errorf("SearchNFInstances' response body cannot close: %+w", bodyCloseErr)
 		}
 	}()
+
+	amfSelf := amf_context.AMF_Self()
+
+	NrfSubscriptionData := models.NrfSubscriptionData{
+		NfStatusNotificationUri: fmt.Sprintf("%s/namf-callback/v1/nf-status-notify", amfSelf.GetIPv4Uri()),
+		SubscrCond:              &models.NfTypeCond{NfType: targetNfType},
+		ReqNfType:               models.NfType_AMF,
+	}
+	logger.ConsumerLog.Traceln("NrfSubscriptionData:", NrfSubscriptionData)
+	nrfSubData := SendCreateSubscription(amfSelf, nrfUri, NrfSubscriptionData)
+	if nrfSubData.SubscriptionId == "" {
+		fmt.Println(fmt.Errorf("NRF Subscription Error"))
+	}
+	logger.ConsumerLog.Debugln("nrfSubData.SubscriptionId:", nrfSubData.SubscriptionId)
 	return result, err
 }
 

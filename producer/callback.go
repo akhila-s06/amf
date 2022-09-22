@@ -10,6 +10,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+
+	nrf_cache "github.com/omec-project/amf/nrfcache"
 
 	"github.com/mohae/deepcopy"
 
@@ -433,5 +436,48 @@ func N1MessageNotifyProcedure(n1MessageNotify models.N1MessageNotify) *models.Pr
 
 		nas.HandleNAS(ranUe, ngapType.ProcedureCodeInitialUEMessage, n1MessageNotify.BinaryDataN1Message)
 	}()
+	return nil
+}
+
+func HandleNfSubscriptionStatusNotify(request *http_wrapper.Request) *http_wrapper.Response {
+	logger.ProducerLog.Infoln("[AMF] Handle NF Status Notify")
+
+	notificationData := request.Body.(models.NotificationData)
+
+	problemDetails := NfSubscriptionStatusNotifyProcedure(notificationData)
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	} else {
+		return http_wrapper.NewResponse(http.StatusNoContent, nil, nil)
+	}
+}
+
+func NfSubscriptionStatusNotifyProcedure(notificationData models.NotificationData) *models.ProblemDetails {
+	logger.ProducerLog.Debugf("NfSubscriptionStatusNotify: %+v", notificationData)
+
+	if notificationData.Event == "" || notificationData.NfInstanceUri == "" {
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MANDATORY_IE_MISSING", // Defined in TS 29.510 6.1.6.2.17
+			Detail: "Missing IE [Event]/[NfInstanceUri] in NotificationData",
+		}
+		return problemDetails
+	}
+	nfInstanceId := notificationData.NfInstanceUri[strings.LastIndex(notificationData.NfInstanceUri, "/")+1:]
+	logger.ProducerLog.Debugf("nfInstanceId:", nfInstanceId)
+
+	ok := nrf_cache.RemoveNfInstanceFromCache(nfInstanceId)
+	if ok {
+		logger.ProducerLog.Traceln("nfInstanceId deleted from cache", nfInstanceId)
+	}
+	logger.ProducerLog.Debugln("nfinstance deleted from cache:", ok)
+
+	if notificationData.Event == models.NotificationEventType_PROFILE_CHANGED {
+		logger.ProducerLog.Debugf("NotificationEventType_PROFILE_CHANGED")
+	} else if notificationData.Event == models.NotificationEventType_DEREGISTERED {
+		logger.ProducerLog.Debugf("NotificationEventType_DEREGISTERED")
+	} else if notificationData.Event == models.NotificationEventType_REGISTERED {
+		logger.ProducerLog.Debugf("NotificationEventType_REGISTERED")
+	}
 	return nil
 }

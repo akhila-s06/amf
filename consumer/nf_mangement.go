@@ -174,3 +174,39 @@ var SendUpdateNFInstance = func(patchItem []models.PatchItem) (nfProfile models.
 	}
 	return
 }
+
+func SendCreateSubscription(ctx *amf_context.AMFContext, nrfUri string, nrfSubscriptionData models.NrfSubscriptionData) (nrfSubData models.NrfSubscriptionData) {
+	logger.ConsumerLog.Infoln("[AMF] Send Create Subscription")
+	// Set client and set url
+	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration.SetBasePath(nrfUri)
+	client := Nnrf_NFManagement.NewAPIClient(configuration)
+
+	var nrfSubsData models.NrfSubscriptionData
+	for {
+		nrfSubData, res, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), nrfSubscriptionData)
+		nrfSubsData = nrfSubData
+		if err != nil || res == nil {
+			fmt.Println(fmt.Errorf("NRF Subscription Error[%s]", err.Error()))
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		defer func() {
+			if bodyCloseErr := res.Body.Close(); bodyCloseErr != nil {
+				err = fmt.Errorf("CreateSubscription' response body cannot close: %+w", bodyCloseErr)
+			}
+		}()
+
+		if res.StatusCode == http.StatusCreated {
+			logger.ConsumerLog.Debug("res.StatusCode:", res.StatusCode)
+			logger.ConsumerLog.Debug("nrfSubData:", nrfSubData)
+			return nrfSubData
+		} else {
+			fmt.Println(fmt.Errorf("handler returned wrong status code %d", res.StatusCode))
+			fmt.Println(fmt.Errorf("NRF return wrong status code %d", res.StatusCode))
+		}
+	}
+	logger.ConsumerLog.Debug("return empty nrfSubsData:", nrfSubsData)
+	return nrfSubsData
+}

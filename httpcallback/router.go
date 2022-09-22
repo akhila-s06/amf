@@ -104,4 +104,11 @@ var routes = Routes{
 		"/n1-message-notify",
 		HTTPN1MessageNotify,
 	},
+
+	{
+		"NfStatusNotify",
+		strings.ToUpper("Post"),
+		"/nf-status-notify",
+		HTTPNfSubscriptionStatusNotify,
+	},
 }
