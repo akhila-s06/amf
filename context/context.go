@@ -117,7 +117,7 @@ func (context *AMFContext) TmsiAllocate() int32 {
 		logger.ContextLog.Errorf("Allocate TMSI error: %+v", err)
 		return -1
 	}
-	logger.ContextLog.Infof("Allocate TMSI : ", val)
+	logger.ContextLog.Infof("Allocate TMSI : %v", val)
 	return int32(val)
 }
 
@@ -129,7 +129,7 @@ func (context *AMFContext) AllocateAmfUeNgapID() (int64, error) {
 		return -1, err
 	}
 
-	logger.ContextLog.Infof("Allocate AmfUeNgapID : ", val)
+	logger.ContextLog.Infof("Allocate AmfUeNgapID : %v", val)
 	return int64(val), nil
 }
 
