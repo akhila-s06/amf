@@ -250,6 +250,17 @@ func (c *NrfCache) startExpiryProcessing() {
 	}
 }
 
+func (c *NrfCache) removeByNfInstanceId(nfInstanceId string) bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	NfProfileItem, rc := c.cache[nfInstanceId]
+	if rc {
+		c.remove(NfProfileItem)
+	}
+	return rc
+}
+
 func NewNrfCache(duration time.Duration, dbqueryCb NrfDiscoveryQueryCb) *NrfCache {
 	cache := &NrfCache{
 		cache:               make(map[string]*NfProfileItem),
@@ -322,6 +333,19 @@ func (c *NrfMasterCache) clearNrfMasterCache() {
 	}
 }
 
+func (c *NrfMasterCache) RemoveNfProfile(nfInstanceId string) bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	var ok bool
+	for _, nrfCache := range c.nfTypeToCacheMap {
+		if ok = nrfCache.removeByNfInstanceId(nfInstanceId); ok {
+			break
+		}
+	}
+	return ok
+}
+
 var masterCache *NrfMasterCache
 
 type NrfDiscoveryQueryCb func(nrfUri string, targetNfType, requestNfType models.NfType, param *Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (models.SearchResult, error)
@@ -364,23 +388,4 @@ func SearchNFInstances(nrfUri string, targetNfType, requestNfType models.NfType,
 
 func RemoveNfProfileFromNrfCache(nfInstanceId string) bool {
 	return masterCache.RemoveNfProfile(nfInstanceId)
-}
-
-func (c *NrfMasterCache) RemoveNfProfile(nfInstanceId string) bool {
-	var ok bool
-	for _, nrfCache := range c.nfTypeToCacheMap {
-		// ok := nrfCache.removeByNfInstanceId(nfInstanceId)
-		if ok = nrfCache.removeByNfInstanceId(nfInstanceId); ok {
-			break
-		}
-	}
-	return ok
-}
-
-func (c *NrfCache) removeByNfInstanceId(nfInstanceId string) bool {
-	NfProfileItem, rc := c.cache[nfInstanceId]
-	if rc {
-		c.remove(NfProfileItem)
-	}
-	return rc
 }
