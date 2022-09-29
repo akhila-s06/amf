@@ -465,19 +465,13 @@ func NfSubscriptionStatusNotifyProcedure(notificationData models.NotificationDat
 	}
 	nfInstanceId := notificationData.NfInstanceUri[strings.LastIndex(notificationData.NfInstanceUri, "/")+1:]
 	logger.ProducerLog.Debugf("nfInstanceId:", nfInstanceId)
+	logger.ProducerLog.Traceln(notificationData.Event)
 
-	ok := nrf_cache.RemoveNfInstanceFromCache(nfInstanceId)
+	ok := nrf_cache.RemoveNfProfileFromNrfCache(nfInstanceId)
 	if ok {
 		logger.ProducerLog.Traceln("nfInstanceId deleted from cache", nfInstanceId)
 	}
-	logger.ProducerLog.Debugln("nfinstance deleted from cache:", ok)
+	logger.ProducerLog.Traceln("nfinstance deleted from cache:", ok)
 
-	if notificationData.Event == models.NotificationEventType_PROFILE_CHANGED {
-		logger.ProducerLog.Debugf("NotificationEventType_PROFILE_CHANGED")
-	} else if notificationData.Event == models.NotificationEventType_DEREGISTERED {
-		logger.ProducerLog.Debugf("NotificationEventType_DEREGISTERED")
-	} else if notificationData.Event == models.NotificationEventType_REGISTERED {
-		logger.ProducerLog.Debugf("NotificationEventType_REGISTERED")
-	}
 	return nil
 }

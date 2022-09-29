@@ -47,18 +47,20 @@ func SendNfDiscoveryToNrf(nrfUri string, targetNfType, requestNfType models.NfTy
 	}()
 
 	amfSelf := amf_context.AMF_Self()
-
-	NrfSubscriptionData := models.NrfSubscriptionData{
-		NfStatusNotificationUri: fmt.Sprintf("%s/namf-callback/v1/nf-status-notify", amfSelf.GetIPv4Uri()),
-		SubscrCond:              &models.NfTypeCond{NfType: targetNfType},
-		ReqNfType:               models.NfType_AMF,
+	for _, nfProfile := range result.NfInstances {
+		NrfSubscriptionData := models.NrfSubscriptionData{
+			NfStatusNotificationUri: fmt.Sprintf("%s/namf-callback/v1/nf-status-notify", amfSelf.GetIPv4Uri()),
+			SubscrCond:              &models.NfInstanceIdCond{NfInstanceId: nfProfile.NfInstanceId},
+			ReqNfType:               models.NfType_AMF,
+		}
+		logger.ConsumerLog.Traceln("NrfSubscriptionData:", NrfSubscriptionData)
+		nrfSubData := SendCreateSubscription(amfSelf, nrfUri, NrfSubscriptionData)
+		if nrfSubData.SubscriptionId == "" {
+			fmt.Println(fmt.Errorf("NRF Subscription Error"))
+		}
+		logger.ConsumerLog.Debugln("nrfSubData.SubscriptionId:", nrfSubData.SubscriptionId)
+		logger.ConsumerLog.Debugln("nrfSubData.ValidityTime:", nrfSubData.ValidityTime)
 	}
-	logger.ConsumerLog.Traceln("NrfSubscriptionData:", NrfSubscriptionData)
-	nrfSubData := SendCreateSubscription(amfSelf, nrfUri, NrfSubscriptionData)
-	if nrfSubData.SubscriptionId == "" {
-		fmt.Println(fmt.Errorf("NRF Subscription Error"))
-	}
-	logger.ConsumerLog.Debugln("nrfSubData.SubscriptionId:", nrfSubData.SubscriptionId)
 	return result, err
 }
 

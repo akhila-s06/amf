@@ -362,20 +362,25 @@ func SearchNFInstances(nrfUri string, targetNfType, requestNfType models.NfType,
 
 }
 
-func RemoveNfInstanceFromCache(nfInstanceId string) bool {
-	nfTypes := make([]models.NfType, 0, len(masterCache.nfTypeToCacheMap))
-	for nfType := range masterCache.nfTypeToCacheMap {
-		nfTypes = append(nfTypes, nfType)
-	}
-	remove := false
-	for _, nfType := range nfTypes {
-		nrfCache := masterCache.nfTypeToCacheMap[nfType]
-		NfProfileItem := nrfCache.cache[nfInstanceId]
-		if nrfCache == nil || NfProfileItem == nil {
-			continue
+func RemoveNfProfileFromNrfCache(nfInstanceId string) bool {
+	return masterCache.RemoveNfProfile(nfInstanceId)
+}
+
+func (c *NrfMasterCache) RemoveNfProfile(nfInstanceId string) bool {
+	var ok bool
+	for _, nrfCache := range c.nfTypeToCacheMap {
+		// ok := nrfCache.removeByNfInstanceId(nfInstanceId)
+		if ok = nrfCache.removeByNfInstanceId(nfInstanceId); ok {
+			break
 		}
-		nrfCache.remove(NfProfileItem)
-		remove = true
 	}
-	return remove
+	return ok
+}
+
+func (c *NrfCache) removeByNfInstanceId(nfInstanceId string) bool {
+	NfProfileItem, rc := c.cache[nfInstanceId]
+	if rc {
+		c.remove(NfProfileItem)
+	}
+	return rc
 }
