@@ -8,14 +8,15 @@ package nrf_cache
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/antihax/optional"
-	"github.com/omec-project/amf/util"
-	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
-	"github.com/omec-project/openapi/models"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/antihax/optional"
+	"github.com/omec-project/amf/util"
+	"github.com/omec-project/openapi/Nnrf_NFDiscovery"
+	"github.com/omec-project/openapi/models"
 )
 
 var nfProfilesDb map[string]string
@@ -758,6 +759,49 @@ func TestAusfMatchFilters(t *testing.T) {
 	}
 	if expectedCallCount != nrfDbCallbackCallCount {
 		t.Error("Unexpected nrfDbCallbackCallCount")
+	}
+	DisableNrfCaching()
+}
+
+func TestRemoveNfProfile(t *testing.T) {
+	evictionTimerVal := time.Duration(evictionInterval)
+	InitNrfCaching(evictionTimerVal*time.Second, nrfDbCallback)
+
+	nrfCache := masterCache.GetNrfCacheInstance(models.NfType_AUSF)
+
+	nfProfiles, err := getNfProfiles(models.NfType_AUSF)
+	if err != nil {
+		t.Error("Failed to get NF profiles")
+	}
+	// setting nfprofiles to nrfcache
+	for _, profile := range nfProfiles {
+		nfProfile := &profile
+		nrfCache.set(nfProfile, 0)
+	}
+
+	for _, tc := range []struct {
+		description  string
+		nfInstanceId string
+		expected     bool
+	}{
+		{
+			"deleting nfProfile which is cached",
+			"57d0a167-5283-4170-bdd8-881076049a81",
+			true,
+		},
+		{
+			"deleting nfProfile which is not cached",
+			"4170-bdd8",
+			false,
+		},
+	} {
+		t.Run(tc.description, func(t *testing.T) {
+			remove := masterCache.RemoveNfProfile(tc.nfInstanceId)
+			fmt.Println("running test and got:", remove)
+			if tc.expected != remove {
+				t.Errorf("Expected =%v, but Actual =%v.", tc.expected, remove)
+			}
+		})
 	}
 	DisableNrfCaching()
 }

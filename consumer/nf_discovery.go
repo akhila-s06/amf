@@ -51,7 +51,7 @@ func SendNfDiscoveryToNrf(nrfUri string, targetNfType, requestNfType models.NfTy
 		NrfSubscriptionData := models.NrfSubscriptionData{
 			NfStatusNotificationUri: fmt.Sprintf("%s/namf-callback/v1/nf-status-notify", amfSelf.GetIPv4Uri()),
 			SubscrCond:              &models.NfInstanceIdCond{NfInstanceId: nfProfile.NfInstanceId},
-			ReqNfType:               models.NfType_AMF,
+			ReqNfType:               requestNfType,
 		}
 		logger.ConsumerLog.Traceln("NrfSubscriptionData:", NrfSubscriptionData)
 		nrfSubData := SendCreateSubscription(amfSelf, nrfUri, NrfSubscriptionData)
