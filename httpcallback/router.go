@@ -109,4 +109,10 @@ var routes = Routes{
 		"/nf-status-notify",
 		HTTPNfSubscriptionStatusNotify,
 	},
+	{
+		"NfDeregNotify",
+		strings.ToUpper("Post"),
+		":supi/dereg-notify",
+		HTTPDeregisterNotification,
+	},
 }
