@@ -17,7 +17,7 @@ import (
 	"github.com/omec-project/util/httpwrapper"
 )
 
-func HTTPDeregisterNotification(c *gin.Context) {
+func HTTPDeregistrationNotification(c *gin.Context) {
 	var deregistData models.DeregistrationData
 
 	requestBody, err := c.GetRawData()
@@ -50,7 +50,7 @@ func HTTPDeregisterNotification(c *gin.Context) {
 	if supi, exists := c.Params.Get("supi"); exists {
 		req.Params["supi"] = supi
 	}
-	rsp := producer.HandleDeregisterNotification(req)
+	rsp := producer.HandleDeregistrationNotification(req)
 
 	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
 	if err != nil {

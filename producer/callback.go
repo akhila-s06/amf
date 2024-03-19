@@ -494,8 +494,8 @@ func NfSubscriptionStatusNotifyProcedure(notificationData models.NotificationDat
 	return nil
 }
 
-func HandleDeregisterNotification(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ProducerLog.Debugln("HandleDeregisterNotification")
+func HandleDeregistrationNotification(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.ProducerLog.Debugln("Handle Deregistration Notification")
 	deregistData := request.Body.(models.DeregistrationData)
 
 	switch deregistData.DeregReason {
